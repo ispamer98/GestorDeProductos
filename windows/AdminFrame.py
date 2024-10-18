@@ -761,7 +761,23 @@ class AdminFrame(Frame):
                                            f"¿Estás seguro de querer cerrar la sesión del usuario "
                                            f"\"{self.user.username}\"?")
 
+
+
         if confirmation:
+            for i, widget in enumerate([self.welcome_message, self.manage_products_button, self.manage_users_button]):
+                info = self.admin_frame_widets_info[i]
+                widget.place(relx=info['relx'], rely=info['rely'], anchor=info['anchor'])
+
+            widgets_to_hide = [self.table, self.back_button, self.modify_product_buttom, self.add_product_buttom,
+                               self.delete_product_button]
+            for widget in widgets_to_hide:
+                widget.place_forget()
+
+            widgets_to_hide = [self.table, self.back_button, self.modify_user_buttom, self.add_user_buttom,
+                               self.delete_user_button]
+            for widget in widgets_to_hide:
+                widget.place_forget()
+
             self.controller.show_frame("FirstFrame", title="App Gestor de Productos")
 
     def goBack_users(self):

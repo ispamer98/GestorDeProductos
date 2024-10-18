@@ -38,11 +38,11 @@ class UserFrame(Frame):
         self.button_style = {"font": ("Comic Sans MS", 14), "padx": 10, "pady": 5, "relief": "flat"}
         self.button_style2 = {"font": ("Comic Sans MS", 14), "padx": 10, "pady": 5, "relief": "flat", "background": "#d3d3d3"}
 
-        # Crea un botón para volver al frame principal.
+        # Creamos un botón para volver al frame principal.
         self.back_button = Button(self, text="Cerrar Sesión", bg="#333333", fg="white", **self.button_style, command=self.close_session)
         self.back_button.place(relx=1, rely=1, anchor="se")
 
-        # Crear el Frame que contendrá el Treeview
+        # Creamos el Frame que contendrá el Treeview
         self.table = Frame(self, bg="white")
         self.table.place(relx=0.5, rely=0.4, anchor="center", width=500, height=400)
 
@@ -75,7 +75,7 @@ class UserFrame(Frame):
                        foreground=[("selected", "black")])  # Color del texto en las filas seleccionadas
 
 
-        # Crear el Treeview para mostrar los productos
+        # Creamo el Treeview para mostrar los productos
         self.products_tree = ttk.Treeview(self.table, columns=("name", "price"),
                                           show="headings", height=15, style="Custom.Treeview")
         self.products_tree.heading("name", text="Producto") # Creamos la columna de producto
@@ -91,7 +91,7 @@ class UserFrame(Frame):
         self.products_tree.pack(side='left', fill=BOTH, expand=True, padx=10, pady=10)
         vertical_scrollbar.pack(side='right', fill='y')
 
-        # Botón para añadir al carrito
+        # Creamos el botón para añadir al carrito
         self.cart_button = Button(self, text="Añadir al Carrito", compound="bottom", **self.button_style,
                                   command=self.add_to_cart)
         self.cart_button.place(relx=0.5, rely=0.7, anchor="center")
@@ -120,8 +120,9 @@ class UserFrame(Frame):
         # Muestra los productos en el treeview
         self.show_products()
 
+    #Creamos una función que se encargue de actualizar la etiqueta del total de productos en el carrito
     def update_cart_quantity(self):
-        # Verificar si self.user es None
+        # Verificar si encuentra el usuario
         if self.user is None:
             return  # No hacer nada si no hay usuario
 
@@ -132,8 +133,14 @@ class UserFrame(Frame):
         if self.cart:
             # Capturamos todos los productos de la base de datos
             products_in_db = db.session.query(Product.name).all()
-            # Y nos quedamos con los nombres de los productos
-            products_in_db_names = [product_name[0] for product_name in products_in_db]
+
+            # Creamos una lista vacía para almacenar los nombres de los productos
+            products_in_db_names = []
+
+            # Recorremos la lista de productos
+            for product_name in products_in_db:
+                # Extraemos el nombre del producto y lo añadimos a la lista
+                products_in_db_names.append(product_name[0])
 
             # Filtramos los productos del carrito para eliminar los que no están en la base de datos
             filtered_products = [] # Iniciamos la lista de productos que coinciden tanto en carrito como en db
@@ -148,8 +155,16 @@ class UserFrame(Frame):
                 self.cart.products = filtered_products
                 db.session.commit()
 
-            # Calculamos la cantidad total de productos
-            total_quantity = sum(item.get("quantity", 0) for item in self.cart.products)
+            # Creamos una variable para almacenar la cantidad total de productos
+            total_quantity = 0
+
+            # Recorremos cada producto en el carrito
+            for item in self.cart.products:
+                # Obtenemos la cantidad del producto, si no existe la clave "quantity", usamos 0
+                quantity = item.get("quantity", 0)
+
+                # Sumamos la cantidad al total
+                total_quantity += quantity
         else:
             total_quantity = 0
 
@@ -162,7 +177,7 @@ class UserFrame(Frame):
         # Actualizamos la etiqueta con la cantidad total de productos
         self.cart_quantity_label.config(text=str(total_quantity), font=('Comic Sans MS', 9, 'bold'), fg='green')
 
-    # Función que se encargará de añadir productos al carrito de l usuario
+    # Función que se encargará de añadir productos al carrito del usuario
     def add_to_cart(self):
         # Obtenemos el carrito del usuario desde la base de datos
         self.cart = db.session.query(Cart).filter_by(username=self.user.username).first()
@@ -176,50 +191,58 @@ class UserFrame(Frame):
         # Obtenemos la selección del Treeview
         selection = self.products_tree.selection()
 
-        # Verificamos si se ha seleccionado un producto
+        # Si no se ha seleccionado un producto
         if not selection:
             ctypes.windll.user32.MessageBeep(0x00000010)  # Sonido de exclamación
             # Creamos una etiqueta de error
-            self.not_product_select = Label(self, text="", font=('Comic Sans MS', 12), fg='red')
-            self.not_product_select.place(relx=0.5, rely=0.85, anchor="center")  # Ajusta la posición
-            self.not_product_select.config(text="Debes seleccionar un producto")
+            self.not_product_select_label = Label(self, text="", font=('Comic Sans MS', 12), fg='red')
+            self.not_product_select_label.place(relx=0.5, rely=0.85, anchor="center")  # Ajusta la posición
+            self.not_product_select_label.config(text="Debes seleccionar un producto")
             return
 
-        # Elimina el mensaje de selección si ya existía
-        if hasattr(self, 'not_product_select') and self.not_product_select.winfo_exists():
-            self.not_product_select.destroy()
+        # Eliminamos el mensaje de error si ya existía
+        if hasattr(self, 'not_product_select_label') and self.not_product_select_label.winfo_exists():
+            self.not_product_select_label.destroy()
 
-        # Obtén los datos del producto seleccionado
+        # Obtenemos los datos del producto seleccionado
         product = selection[0]
-        product_data = self.products_tree.item(product, "values")
-        product_name = product_data[0]
-        product_price = float(product_data[1].rstrip("€"))
+        product_data = self.products_tree.item(product, "values") # Guardamos los valores
+        product_name = product_data[0] # Guardamos el nombre
+        product_price = float(product_data[1].rstrip("€")) #Y el precio sin el simbolo
 
-        # Bandera para saber si el producto se actualizó
+        # Creamos una variable para saber si es una actualización del producto en el carrito
         product_updated = False
 
         # Actualiza la cantidad si el producto ya está en el carrito
-        for item in self.cart.products:
-            if item["name"] == product_name:
-                item["quantity"] += 1
-                product_updated = True
-                ctypes.windll.user32.MessageBeep(0x00000010)
-                self.show_add_message(f"{product_name} añadido al carrito")
+        for item in self.cart.products: # Itera sobre los productos en el carrito
+            if item["name"] == product_name: # Si el objeto encontrado es igual al seleccionado
+                item["quantity"] += 1 # Actualizará la cantidad
+                product_updated = True #Actualizará la variable para saber que ya se encuentra
+                ctypes.windll.user32.MessageBeep(0x00000010) # Manda un sonido
+                self.show_add_message(f"{product_name} añadido al carrito") #Y crea una etiqueta para avisar
                 break
 
-        # Si el producto no estaba en el carrito, agrégalo
+        # Si el producto no estaba en el carrito lo agregamos
         if not product_updated:
-            new_product = {"name": product_name, "price": product_price, "quantity": 1}
-            ctypes.windll.user32.MessageBeep(0x00000010)
-            self.cart.products.append(new_product)
-            self.show_add_message(f"{product_name} añadido al carrito")
+            new_product = {"name": product_name, "price": product_price, "quantity": 1} # Creamos el producto en forma de diccionario
+            ctypes.windll.user32.MessageBeep(0x00000010) #Añadimos un sonido al agregarlo
+            self.cart.products.append(new_product) #Añadimos el producto al carrito
+            self.show_add_message(f"{product_name} añadido al carrito") # Mostramos el mensaje de aañadido
 
-        # Marca la columna 'products' como modificada
+        # Marca la columna products como modificada
         flag_modified(self.cart, "products")
 
-        # Recalcula el total del carrito
-        total_price = sum(p["price"] * p["quantity"] for p in self.cart.products)
-        self.cart.total_price = round(total_price, 2)
+        # Inicializamos la variable para almacenar el precio total
+        total_price = 0
+
+        # Recorremos cada producto en el carrito
+        for product in self.cart.products:
+            # Calculamos el precio de cada producto
+            price = product["price"] * product["quantity"]
+
+            # Sumamos el precio al total
+            total_price += price
+        self.cart.total_price = round(total_price, 2) #Redondemos a dos decimales el precio
 
         # Actualiza la cantidad en el carrito
         self.update_cart_quantity()
@@ -246,10 +269,13 @@ class UserFrame(Frame):
         # Programa la eliminación de la etiqueta después de 3 segundos (3000 milisegundos)
         self.remove_message_id = self.after(3000, self.remove_message)
 
+    #Función que se encargará de eliminar el mensaje de añadido
     def remove_message(self):
         # Verifica si la etiqueta existe antes de intentar destruirla
         if hasattr(self, 'add_to_cart_label') and self.add_to_cart_label.winfo_exists():
             self.add_to_cart_label.destroy()
+
+    # Función que se encargará de mostrar el carrito
     def show_cart(self):
         # Crear la ventana del carrito
         self.cart_window = Toplevel(self)
@@ -433,11 +459,20 @@ class UserFrame(Frame):
         confirm_button.pack(pady=10)
 
         self.update_cart_quantity()
-    def change_quantity(self, delta):
-        # Cambiar la cantidad de acuerdo al delta (1 para incremento, -1 para decremento)
-        new_quantity = self.quantity_var.get() + delta
+
+        # Al cerrar la ventana de modificación, restaurar el grab_set en self.cart_window
+        self.modify_window.protocol("WM_DELETE_WINDOW", lambda: (
+            self.modify_window.grab_release(),  # Libera el grab actual
+            self.cart_window.grab_set(),  # Restablece el grab en cart_window
+            self.modify_window.destroy()  # Destruye la ventana de modificación
+        ))
+
+
+    def change_quantity(self, quantity):
+        # Cambiar la cantidad de acuerdo a lo que se añade
+        new_quantity = self.quantity_var.get() + quantity
         if new_quantity < 0:
-            new_quantity = 0  # Evitar cantidad negativa
+            new_quantity = 0  # Evitamos la cantidad negativa
         self.quantity_var.set(new_quantity)
 
         self.update_cart_quantity()
@@ -458,10 +493,10 @@ class UserFrame(Frame):
                     product["quantity"] = new_quantity
                 break
 
-        # Recalcular el total_price
+        # Recalculamos el precio total
         self.cart.total_price = sum(p["price"] * p["quantity"] for p in self.cart.products)
 
-        # Marcar la columna como modificada para que SQLAlchemy registre los cambios
+        # Marcar la columna como modificada
         flag_modified(self.cart, "products")
 
         # Guardar los cambios en la base de datos
@@ -471,9 +506,11 @@ class UserFrame(Frame):
         # Actualizar la vista del carrito
         self.update_cart_view()
 
-        # Cerrar la ventana de modificación
-        self.modify_window.destroy()
-        self.update_cart_quantity()
+
+        self.modify_window.destroy()  # Destruye la ventana de modificación
+        self.modify_window.grab_release(),  # Libera el grab actual
+        self.cart_window.grab_set(),  # Restablece el grab en cart_window
+        self.update_cart_quantity() # Actualiza la cantidad de items en el carrito
 
     def update_cart_view(self):
         # Volver a consultar el carrito actualizado
@@ -484,38 +521,46 @@ class UserFrame(Frame):
 
 
         # Insertar los productos actualizados en el Treeview
-        total_price = 0
-        for product in self.cart.products:
-            if product["quantity"] > 0:
+        total_price = 0 # Establecemos el precio total del carrito en 0
+        for product in self.cart.products: # Recorremos los productos en el carrito
+            if product["quantity"] > 0: # Si la cantidad del producto es mayor que 0
+                # Introducimos en el Treeview  los calores nombre y cantidad
                 self.cart_tree.insert("", "end", values=(product["name"], product["quantity"]))
-                total_price += product["price"] * product["quantity"]
+                total_price += product["price"] * product["quantity"] # Y Actualizamos el precio total segun la cantidad de items de cada producto
 
-        # Actualizar el total_price en la vista
+        # Si la etiqueta del precio total ya existe, la eliminamos
         if hasattr(self, 'total_price_label'):
             self.total_price_label.destroy()  # Eliminar la etiqueta existente si existe
 
+        # Y la modificamos por el precio total actualizado
         self.total_price_label = Label(self.cart_window, text=f"Total: {total_price:.2f}€", font=("Comic Sans MS", 12),
                                        bg="white")
         self.total_price_label.place(relx=0.5, rely=0.70, anchor="center")
-        self.update_cart_quantity()
+        self.update_cart_quantity() # Y actualizamos la cantidad de items en el carrito
 
+
+    # Mostramos los productos disponibles en el Treeview
     def show_products(self):
+        # Buscamos en la base de datos
         all_products = db.session.query(Product).all()
 
+        # Eliminamos el Treeview anterior
         for row in self.products_tree.get_children():
             self.products_tree.delete(row)
 
+        # Establecemos un maximo de 18 lineas para el Treeview
         self.products_tree.config(height=min(len(all_products),18))
 
-
+        # E insertamos uno a uno los nombres y precios de cada producto
         for product in all_products:
             self.products_tree.insert("", "end", values=(product.name,f"{product.price}€"))
 
 
+    # Creamos la funcion que cierra la sesion
     def close_session(self):
-        winsound.MessageBeep(2500)
+        winsound.MessageBeep(2500) # Enviamos un sonido de alerta
 
-        # Muestra una ventana de confirmación
+        # Mostramos una ventana de confirmación
         confimation =  messagebox.askyesno("Cerrar Sesión",
                                      f"¿Estás seguro de querer cerrar el usuario "
                                              f"\n                         \"{self.user.username}\"   ?")
