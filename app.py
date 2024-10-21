@@ -129,5 +129,7 @@ if __name__ == "__main__":
     #Asociamos el evento de cerrar la ventana con la función de close_app
     root.protocol("WM_DELETE_WINDOW", app.close_app)
 
+
+
     # Y por último iniciamos el bucle que mantiene la app en ejecución
     root.mainloop()
