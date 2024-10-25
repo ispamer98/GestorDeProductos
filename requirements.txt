@@ -7,4 +7,4 @@ pynput~=1.7.7
 greenlet~=3.1.0
 keyboard~=0.13.5
 SQLAlchemy~=2.0.35
-pywin32
+pywin32==308

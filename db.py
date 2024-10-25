@@ -3,10 +3,12 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import os
 
 # Configuramos el engine para conectar con SQLite
 engine = create_engine("sqlite:///database/products.db",
                        connect_args={"check_same_thread": False})
+
 
 # Base declarativa para los modelos
 Base = declarative_base()

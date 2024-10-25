@@ -9,6 +9,7 @@ import db
 from models import User
 import re
 
+
 #Creamos el frame que se encargará del registro
 class RegisterFrame(Frame):
     def __init__(self, parent, controller):
