@@ -8,6 +8,7 @@ import db
 from models import User
 
 
+
 # Creamos el frame de Acceso al usuario
 class AccesFrame(Frame):
     def __init__(self, parent, controller):

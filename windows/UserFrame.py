@@ -10,9 +10,9 @@ from tkinter import Frame, Label, Button, Scrollbar
 from PIL import Image, ImageTk
 import db
 from models import User, Product, Cart
-import json
 from sqlalchemy.orm.attributes import flag_modified
 import ctypes
+
 
 
 # Creamos el Frame del panel de usuario
@@ -97,7 +97,7 @@ class UserFrame(Frame):
         self.cart_button.place(relx=0.5, rely=0.7, anchor="center")
 
         # Ruta al archivo .ico
-        self.cart_image = "resources/cart2.ico"
+        self.cart_image = "resources/cart.ico"
 
         # Cargamos la imagen y la preparamos para su uso
         original_image = Image.open(self.cart_image)
@@ -356,7 +356,7 @@ class UserFrame(Frame):
         self.modify_product_button.place(relx=0.70, rely=0.85, anchor="center")
 
         # Configurar el ícono de la ventana y mostrar la ventana
-        self.cart_window.wm_iconbitmap("resources/cart2.ico")
+        self.cart_window.wm_iconbitmap("resources/cart.ico")
         self.cart_window.transient(self.controller.window)
         self.cart_window.wait_window(self.cart_window)
 

@@ -9,12 +9,16 @@ import db
 from models import User, Product, Cart
 from datetime import datetime
 import re
+
+
+
 class AdminFrame(Frame):
     def __init__(self, parent, controller, user):
         Frame.__init__(self, parent)
         self.controller = controller
         self.user = user
 
+        # Cargamos y configuramos la imagen de fondo
         self.image = Image.open("resources/backgroundUser.jpeg")
         self.image = self.image.resize((600, 800), Image.LANCZOS)
         self.image_tk = ImageTk.PhotoImage(self.image)
@@ -43,11 +47,11 @@ class AdminFrame(Frame):
         self.manage_users_button = Button(self, text="Administrar Usuarios", compound="bottom", **self.button_style, command=self.show_manage_users)
         self.manage_users_button.place(relx=0.5, rely=0.6, anchor="center")
 
-        # Crea un botón para volver al frame principal.
-        self.back_button = Button(self, text="Cerrar Sesión", bg="#333333", fg="white", **self.button_style, command=self.close_session)
-        self.back_button.place(relx=1, rely=1, anchor="se")
-
-
+        admin_frame_widets = [self.welcome_message, self.manage_products_button, self.manage_users_button]
+        self.admin_frame_widets_info = []
+        for widget in admin_frame_widets:
+            info = widget.place_info()
+            self.admin_frame_widets_info.append(info)
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def show_manage_products(self):
         # Limpiar el contenido actual del frame
@@ -136,6 +140,8 @@ class AdminFrame(Frame):
         self.delete_product_button = Button(self, text="Eliminar producto", bg="red", fg="white",
                                **self.button_style, command=self.delete_product)
         self.delete_product_button.place(relx=0.5, rely=0.8, anchor="center")
+
+        self.manage_products_buttons=[self.delete_product_button,self.add_product_buttom,self.modify_product_buttom]
 
 
     def modify_product(self):
@@ -470,6 +476,8 @@ class AdminFrame(Frame):
                                **self.button_style, command=self.delete_user)
         self.delete_user_button.place(relx=0.7, rely=0.5, anchor="center")
 
+        self.manage_users_buttons=[self.delete_user_button,self.add_user_buttom,self.modify_user_buttom]
+
 
     def delete_user(self):
         user_selected=self.users_tree.selection()
@@ -768,15 +776,19 @@ class AdminFrame(Frame):
                 info = self.admin_frame_widets_info[i]
                 widget.place(relx=info['relx'], rely=info['rely'], anchor=info['anchor'])
 
-            widgets_to_hide = [self.table, self.back_button, self.modify_product_buttom, self.add_product_buttom,
-                               self.delete_product_button]
-            for widget in widgets_to_hide:
-                widget.place_forget()
 
-            widgets_to_hide = [self.table, self.back_button, self.modify_user_buttom, self.add_user_buttom,
-                               self.delete_user_button]
-            for widget in widgets_to_hide:
-                widget.place_forget()
+            try:
+                widgets_to_hide = [self.table, self.back_button, self.modify_product_buttom, self.add_product_buttom, self.delete_product_button]
+
+                for widget in widgets_to_hide:
+                    widget.place_forget()
+
+                widgets_to_hide = [self.table, self.back_button, self.modify_user_buttom, self.add_user_buttom, self.delete_user_button]
+                for widget in widgets_to_hide:
+                        widget.place_forget()
+
+            except AttributeError:
+                pass
 
             self.controller.show_frame("FirstFrame", title="App Gestor de Productos")
 

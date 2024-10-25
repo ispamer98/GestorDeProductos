@@ -5,6 +5,8 @@ from tkinter import ttk
 from tkinter import Frame, Label, Button
 from PIL import Image, ImageTk
 
+
+
 # Creamos el primer frame
 class FirstFrame(Frame):
     def __init__(self, parent, controller):

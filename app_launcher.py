@@ -1,85 +1,54 @@
 import os
 import subprocess
 import sys
-import tkinter as Tk
-from tkinter import messagebox
-from threading import Thread
 
-def show_message(message):
-    """Muestra un cuadro de diálogo con el mensaje proporcionado."""
-    messagebox.showinfo("Información", message)
 
-def create_venv_and_install(progress_window):
-    """Crea el entorno virtual y instala las dependencias."""
-    venv_path = os.path.join(script_dir, 'venv')
+def create_virtualenv():
+    if not os.path.exists(".venv"):
+        print("Creando entorno virtual...")
+        subprocess.check_call([sys.executable, "-m", "venv", ".venv"])
+        print("Entorno virtual creado.")
 
-    # Crear el entorno virtual
-    subprocess.run([sys.executable, '-m', 'venv', venv_path], check=True)
-
-    # Actualizar pip
-    subprocess.run([os.path.join(venv_path, 'Scripts', 'python'), '-m', 'pip', 'install', '--upgrade', 'pip'], check=True)
-
-    # Instalar dependencias desde requirements.txt
-    subprocess.run([os.path.join(venv_path, 'Scripts', 'pip'), 'install', '-r', 'requirements.txt'], check=True)
-
-    # Cierra la ventana de progreso
-    progress_window.destroy()
-
-    # Verificar si existe app.py y ejecutarlo
-    app_path = os.path.join(script_dir, 'app.py')
-    if os.path.exists(app_path):
-        print("Ejecutando el script Python sin ventana de terminal...")
-        subprocess.Popen([os.path.join(venv_path, 'Scripts', 'python'), app_path])
-        print("El script se ha ejecutado.")
+        # Actualizar pip
+        upgrade_pip()
     else:
-        print("El archivo app.py no se encuentra.")
-        input("Presiona Enter para continuar...")
+        print("El entorno virtual ya existe.")
 
-# Inicializa Tkinter
-root = Tk.Tk()
-root.withdraw()  # Oculta la ventana principal
 
-# Obtiene la ruta del directorio actual
-script_dir = os.path.dirname(os.path.abspath(__file__))
+def upgrade_pip():
+    print("Actualizando pip...")
+    subprocess.check_call([os.path.join('.venv', 'Scripts', 'python.exe'), '-m', 'pip', 'install', '--upgrade', 'pip'],
+                          stderr=subprocess.STDOUT)
 
-# Cambia al directorio del script
-os.chdir(script_dir)
 
-# Ruta del entorno virtual
-venv_path = os.path.join(script_dir, 'venv')
+def install_dependencies():
+    print("Instalando dependencias...")
+    try:
+        subprocess.check_call(
+            [os.path.join('.venv', 'Scripts', 'python.exe'), '-m', 'pip', 'install', '-r', 'requirements.txt'],
+            stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(f"Error al instalar dependencias: {e.output.decode() if e.output else 'sin salida para decodificar.'}")
+        sys.exit(1)
 
-# Verifica si existe el entorno virtual
-if os.path.exists(venv_path):
-    print("Verificando dependencias...")
-    # Verificar si el archivo requirements.txt existe
-    if os.path.exists('requirements.txt'):
-        # Instalar dependencias
-        subprocess.run([os.path.join(venv_path, 'Scripts', 'python'), '-m', 'pip', 'install', '-r', 'requirements.txt'], check=True)
 
-    # Verificar si existe app.py y ejecutarlo
-    app_path = os.path.join(script_dir, 'app.py')
-    if os.path.exists(app_path):
-        print("Ejecutando el script Python sin ventana de terminal...")
-        subprocess.Popen([os.path.join(venv_path, 'Scripts', 'python'), app_path])
-        print("El script se ha ejecutado.")
-    else:
-        print("El archivo app.py no se encuentra.")
-        input("Presiona Enter para continuar...")
+def run_app():
+    print("Ejecutando la aplicación...")
+    try:
+        subprocess.check_call([os.path.join('.venv', 'Scripts', 'python.exe'), 'app.py'])
+    except subprocess.CalledProcessError as e:
+        print(f"Error al ejecutar la aplicación: {e.output.decode() if e.output else 'sin salida para decodificar.'}")
+        sys.exit(1)
 
-else:
-    # Avisar al usuario que se está creando el entorno virtual
-    show_message("No se encontró el entorno virtual. Se está creando uno nuevo y se instalarán las dependencias.")
-    
-    # Crear ventana de progreso
-    progress_window = Tk.Toplevel()
-    progress_window.title("Progreso")
-    label = Tk.Label(progress_window, text="Creando entorno virtual e instalando dependencias...")
-    label.pack(padx=20, pady=20)
 
-    # Ejecutar la creación del entorno y la instalación en un hilo separado
-    thread = Thread(target=create_venv_and_install, args=(progress_window,))
-    thread.start()
+def main():
+    create_virtualenv()
 
-# Ejecutar el bucle principal de Tkinter
-root.mainloop()
+    # Verificar si 'venv' existe antes de instalar dependencias
+    if os.path.exists(".venv"):
+        install_dependencies()
+        run_app()
 
+
+if __name__ == "__main__":
+    main()
